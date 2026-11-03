@@ -1,0 +1,451 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050b14">
+  <meta name="description" content="StegoSafe - Secure image steganography and private message recovery.">
+  <title>StegoSafe | Image Steganography</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="StegoSafe home">
+        <div class="logo">◆</div>
+        <div>
+          <h1>Stego<span>Safe</span></h1>
+          <p>SECURE IMAGE STEGANOGRAPHY</p>
+        </div>
+      </a>
+
+      <div class="privacy-badge">
+        <span class="online-dot"></span>
+        100% LOCAL PROCESSING
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow">PRIVATE. SECURE. INVISIBLE.</div>
+        <h2>Hide in <span>Plain</span> Sight.</h2>
+        <p>
+          Securely hide private messages inside ordinary images using
+          Least Significant Bit steganography and optional AES-256
+          encryption. Your files never leave your device.
+        </p>
+
+        <div class="hero-pills">
+          <span>LSB STEGANOGRAPHY</span>
+          <span>AES-256-GCM</span>
+          <span>PBKDF2 SHA-256</span>
+          <span>CLIENT-SIDE ONLY</span>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Steganography modes">
+        <button class="tab active" id="hideTab" type="button">
+          <span>↗</span> Hide Message
+        </button>
+        <button class="tab" id="extractTab" type="button">
+          <span>↙</span> Extract Message
+        </button>
+      </nav>
+
+      <!-- HIDE MESSAGE -->
+      <section id="hideSection">
+        <div class="section-heading">
+          <div>
+            <small>01 / ENCODING</small>
+            <h3>Hide a Secret Message</h3>
+            <p>Embed your private message inside an image.</p>
+          </div>
+          <div class="algorithm-badge">LSB ENCODING</div>
+        </div>
+
+        <div class="workspace">
+          <!-- IMAGE UPLOAD -->
+          <article class="card">
+            <div class="card-heading">
+              <h4>Cover Image</h4>
+              <span>STEP 01</span>
+            </div>
+
+            <label class="upload-area" id="coverDrop" for="coverInput">
+              <input
+                type="file"
+                id="coverInput"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+              >
+              <div class="upload-icon">⇧</div>
+              <strong>Choose an image</strong>
+              <small>PNG, JPG or WebP · Maximum 20 MB</small>
+              <b>Browse Files</b>
+            </label>
+
+            <div id="coverFileInfo" class="file-info hidden">
+              <div class="file-type">IMG</div>
+              <div class="file-details">
+                <strong id="coverFileName">image.png</strong>
+                <small id="coverDimensions">0 × 0</small>
+              </div>
+              <button
+                class="remove-btn"
+                id="removeCover"
+                type="button"
+                aria-label="Remove cover image"
+              >×</button>
+            </div>
+
+            <div id="coverPreviewBox" class="image-preview hidden">
+              <img id="coverPreview" alt="Selected cover image preview">
+            </div>
+
+            <div id="coverStatus" class="status" aria-live="polite">
+              No image selected.
+            </div>
+          </article>
+
+          <!-- MESSAGE INPUT -->
+          <article class="card">
+            <div class="card-heading">
+              <h4>Secret Message</h4>
+              <span>STEP 02</span>
+            </div>
+
+            <label class="form-label" for="secretMessage">
+              MESSAGE CONTENT
+            </label>
+
+            <textarea
+              id="secretMessage"
+              maxlength="100000"
+              placeholder="Type your confidential message here..."
+            ></textarea>
+
+            <div class="textarea-info">
+              <span>UTF-8 TEXT SUPPORT</span>
+              <span id="characterCount">0 / 100000</span>
+            </div>
+
+            <label class="form-label" for="hidePassword">
+              ENCRYPTION PASSWORD
+              <small>OPTIONAL</small>
+            </label>
+
+            <div class="password-group">
+              <input
+                type="password"
+                id="hidePassword"
+                placeholder="Enter a strong password"
+                autocomplete="new-password"
+              >
+              <button
+                class="show-password"
+                type="button"
+                data-target="hidePassword"
+              >SHOW</button>
+            </div>
+
+            <p class="crypto-note">
+              If a password is provided, your message is encrypted with
+              AES-256-GCM before it is hidden inside the image.
+            </p>
+
+            <div class="capacity-panel">
+              <div>
+                <span>Available Capacity</span>
+                <strong id="capacityValue">--</strong>
+              </div>
+              <div>
+                <span>Message Size</span>
+                <strong id="messageSize">0 B</strong>
+              </div>
+            </div>
+
+            <button
+              class="primary-button"
+              id="hideButton"
+              type="button"
+              disabled
+            >
+              Hide Message <b>→</b>
+            </button>
+
+            <div id="hideStatus" class="status" aria-live="polite"></div>
+          </article>
+
+          <!-- OUTPUT -->
+          <article class="card">
+            <div class="card-heading">
+              <h4>Generated Image</h4>
+              <span>STEP 03</span>
+            </div>
+
+            <div id="emptyOutput" class="empty-output">
+              <div>▧</div>
+              <strong>Awaiting Generated Image</strong>
+              <small>Your encoded image will appear here after processing.</small>
+            </div>
+
+            <div id="outputBox" class="hidden">
+              <div class="image-preview">
+                <img id="outputPreview" alt="Generated encoded PNG">
+              </div>
+
+              <div class="file-info">
+                <div class="file-type">PNG</div>
+                <div class="file-details">
+                  <strong id="outputFileName">stegosafe-image.png</strong>
+                  <small id="outputFileSize">Ready to download</small>
+                </div>
+              </div>
+
+              <button
+                class="primary-button full"
+                id="downloadButton"
+                type="button"
+              >
+                Download PNG <b>↓</b>
+              </button>
+            </div>
+
+            <button
+              class="secondary-button full clear-output"
+              id="clearHideButton"
+              type="button"
+            >
+              Clear Workspace
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <!-- EXTRACT MESSAGE -->
+      <section id="extractSection" class="hidden">
+        <div class="section-heading">
+          <div>
+            <small>02 / DECODING</small>
+            <h3>Recover a Secret Message</h3>
+            <p>Read hidden information from a StegoSafe PNG image.</p>
+          </div>
+          <div class="algorithm-badge">LSB DECODING</div>
+        </div>
+
+        <div class="workspace extract-workspace">
+          <!-- STEGO IMAGE -->
+          <article class="card">
+            <div class="card-heading">
+              <h4>Stego Image</h4>
+              <span>STEP 01</span>
+            </div>
+
+            <label class="upload-area" for="stegoInput" id="stegoDrop">
+              <input
+                type="file"
+                id="stegoInput"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+              >
+              <div class="upload-icon">⇧</div>
+              <strong>Upload encoded image</strong>
+              <small>Use the PNG downloaded from StegoSafe.</small>
+              <b>Browse Files</b>
+            </label>
+
+            <div id="stegoFileInfo" class="file-info hidden">
+              <div class="file-type">IMG</div>
+              <div class="file-details">
+                <strong id="stegoFileName">image.png</strong>
+                <small id="stegoDimensions">0 × 0</small>
+              </div>
+              <button
+                class="remove-btn"
+                id="removeStego"
+                type="button"
+                aria-label="Remove stego image"
+              >×</button>
+            </div>
+
+            <div id="stegoPreviewBox" class="image-preview hidden">
+              <img id="stegoPreview" alt="Uploaded stego image preview">
+            </div>
+
+            <div id="stegoStatus" class="status" aria-live="polite">
+              No image selected.
+            </div>
+          </article>
+
+          <!-- EXTRACTION CONTROLS -->
+          <article class="card">
+            <div class="card-heading">
+              <h4>Payload Detection</h4>
+              <span>STEP 02</span>
+            </div>
+
+            <div class="payload-state">
+              <i id="payloadIndicator"></i>
+              <div>
+                <strong id="payloadTitle">Waiting for image</strong>
+                <small id="payloadDescription">
+                  Upload an image to inspect its hidden data.
+                </small>
+              </div>
+            </div>
+
+            <div id="extractPasswordGroup" class="hidden">
+              <label class="form-label" for="extractPassword">
+                DECRYPTION PASSWORD
+              </label>
+
+              <div class="password-group">
+                <input
+                  type="password"
+                  id="extractPassword"
+                  placeholder="Enter the original password"
+                  autocomplete="current-password"
+                >
+                <button
+                  class="show-password"
+                  type="button"
+                  data-target="extractPassword"
+                >SHOW</button>
+              </div>
+
+              <p class="crypto-note">
+                Enter the same password that was used to encrypt the message.
+              </p>
+            </div>
+
+            <button
+              class="primary-button"
+              id="extractButton"
+              type="button"
+              disabled
+            >
+              Extract Message <b>→</b>
+            </button>
+
+            <div id="extractStatus" class="status" aria-live="polite"></div>
+
+            <div id="recoveredBox" class="recovered hidden">
+              <div class="recovered-heading">
+                <span>RECOVERED MESSAGE</span>
+                <button
+                  class="small-button"
+                  id="copyButton"
+                  type="button"
+                >Copy</button>
+              </div>
+
+              <pre id="recoveredMessage"></pre>
+            </div>
+
+            <button
+              class="secondary-button full clear-extract"
+              id="clearExtractButton"
+              type="button"
+            >
+              Clear Extraction
+            </button>
+          </article>
+
+          <!-- SECURITY DETAILS -->
+          <article class="card">
+            <div class="card-heading">
+              <h4>Security Information</h4>
+              <span>PROTECTION</span>
+            </div>
+
+            <ul class="security-list">
+              <li>
+                <b>✓</b>
+                <div>
+                  <strong>Local Processing</strong>
+                  <small>Images and messages stay in your browser.</small>
+                </div>
+              </li>
+              <li>
+                <b>✓</b>
+                <div>
+                  <strong>AES-256-GCM</strong>
+                  <small>Authenticated encryption when a password is used.</small>
+                </div>
+              </li>
+              <li>
+                <b>✓</b>
+                <div>
+                  <strong>Random Salt and IV</strong>
+                  <small>Fresh cryptographic values are generated for each message.</small>
+                </div>
+              </li>
+              <li>
+                <b>✓</b>
+                <div>
+                  <strong>PNG Output</strong>
+                  <small>Lossless output preserves the embedded message.</small>
+                </div>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- INFORMATION -->
+      <section class="information-grid">
+        <article>
+          <div class="info-icon">◈</div>
+          <div>
+            <h4>LSB Steganography</h4>
+            <p>
+              Message bits are stored in the least significant bits of
+              image colour channels.
+            </p>
+          </div>
+        </article>
+
+        <article>
+          <div class="info-icon">⌑</div>
+          <div>
+            <h4>Strong Encryption</h4>
+            <p>
+              Optional AES-256-GCM encryption with PBKDF2-SHA-256
+              password-based key derivation.
+            </p>
+          </div>
+        </article>
+
+        <article>
+          <div class="info-icon">⬡</div>
+          <div>
+            <h4>Privacy First</h4>
+            <p>
+              No server, account, upload, or database is required.
+              Everything runs locally.
+            </p>
+          </div>
+        </article>
+      </section>
+
+      <section class="limitations">
+        <h3>Important Usage Notes</h3>
+        <ul>
+          <li>Always keep the generated PNG file as your original encoded image.</li>
+          <li>JPEG compression, resizing, screenshots, filters, and image editing can destroy hidden data.</li>
+          <li>Do not convert the generated PNG into another image format.</li>
+          <li>Use a strong, unique password and keep it safe. A lost password cannot be recovered.</li>
+          <li>Encryption protects message confidentiality and detects ciphertext tampering, but does not hide the fact that an image contains a payload.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>StegoSafe · Secure Image Steganography · Runs entirely in your browser</p>
+    </footer>
+  </div>
+</body>
+</html>
